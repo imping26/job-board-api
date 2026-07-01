@@ -1,0 +1,107 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  password     String
+  name         String
+  role         Role          @default(JOBSEEKER)
+  createdAt    DateTime      @default(now())
+  company      Company?
+  jobs         Job[]
+  applications Application[]
+  savedJobs    SavedJob[]
+}
+
+model Company {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  website     String?
+  logo        String?
+  createdAt   DateTime @default(now())
+  owner       User     @relation(fields: [ownerId], references: [id])
+  ownerId     String   @unique
+  jobs        Job[]
+}
+
+model Job {
+  id           String        @id @default(uuid())
+  title        String
+  description  String
+  location     String
+  salary       String?
+  type         JobType       @default(FULLTIME)
+  status       JobStatus     @default(ACTIVE)
+  createdAt    DateTime      @default(now())
+  employer     User          @relation(fields: [employerId], references: [id])
+  employerId   String
+  company      Company       @relation(fields: [companyId], references: [id])
+  companyId    String
+  applications Application[]
+  savedBy      SavedJob[]
+  category     Category      @relation(fields: [categoryId], references: [id])
+  categoryId   String
+}
+
+model Application {
+  id          String            @id @default(uuid())
+  coverLetter String?
+  status      ApplicationStatus @default(PENDING)
+  createdAt   DateTime          @default(now())
+  applicant   User              @relation(fields: [applicantId], references: [id])
+  applicantId String
+  job         Job               @relation(fields: [jobId], references: [id])
+  jobId       String
+
+  @@unique([applicantId, jobId])
+}
+
+model SavedJob {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  job       Job      @relation(fields: [jobId], references: [id])
+  jobId     String
+
+  @@unique([userId, jobId])
+}
+
+model Category {
+  id   String @id @default(uuid())
+  name String @unique
+  jobs Job[]
+}
+
+enum Role {
+  JOBSEEKER
+  EMPLOYER
+  ADMIN
+}
+
+enum JobType {
+  FULLTIME
+  PARTTIME
+  CONTRACT
+  INTERNSHIP
+}
+
+enum JobStatus {
+  ACTIVE
+  CLOSED
+  DRAFT
+}
+
+enum ApplicationStatus {
+  PENDING
+  REVIEWED
+  ACCEPTED
+  REJECTED
+}
