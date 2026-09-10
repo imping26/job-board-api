@@ -3,7 +3,10 @@
 A full-featured REST API for a job board platform, built with Node.js, Express, and PostgreSQL. Supports three user roles (job seekers, employers, admins) with authentication, job management, applications, file uploads, and email notifications.
 
 **Live Demo:** [job-board-frontend-peach.vercel.app](https://job-board-frontend-peach.vercel.app/)
+**Live API:** [job-board-api-66lm.onrender.com](https://job-board-api-66lm.onrender.com/)
 **Frontend Repo:** [github.com/imping26/job-board-frontend](https://github.com/imping26/job-board-frontend)
+
+> The API runs on Render's free tier, which sleeps after 15 minutes of inactivity. The first request after a pause can take 30–60 seconds while the instance wakes up.
 
 ---
 
@@ -34,7 +37,7 @@ A full-featured REST API for a job board platform, built with Node.js, Express, 
 | File Storage | Cloudinary |
 | Email | Resend |
 | Validation | express-validator |
-| Deployment | Railway |
+| Deployment | Render (API) + Neon (PostgreSQL) + Vercel (frontend) |
 
 ---
 
@@ -168,6 +171,19 @@ FRONTEND_URL="http://localhost:5173"
 ```
 
 The server runs on `http://localhost:8000`.
+
+`FRONTEND_URL` accepts a comma-separated list of origins. Vercel preview deployments of the frontend (`job-board-frontend-*.vercel.app`) are allowed automatically.
+
+---
+
+## Deployment
+
+The API is deployed on **Render** with a **Neon** PostgreSQL database, defined in [`render.yaml`](render.yaml).
+
+- Render builds with `npm ci` and starts with `npm start`, which runs `prisma migrate deploy` before booting the server, so schema changes ship automatically on push to `main`.
+- Set `DATABASE_URL`, `JWT_SECRET`, `FRONTEND_URL`, the three `CLOUDINARY_*` variables and `RESEND_API_KEY` in the Render dashboard. Missing `RESEND_API_KEY` will crash the server at startup.
+- Seed categories once against the production database: `DATABASE_URL=<neon-url> node prisma/seedCategories.js`
+- The frontend on Vercel reads the API address from `VITE_API_URL` (must end in `/api`); redeploy the frontend after changing it.
 
 ---
 
