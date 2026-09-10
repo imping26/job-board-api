@@ -15,8 +15,18 @@ const app = express();
 
 // 1. Middleware
 app.use(helmet({ contentSecurityPolicy: false }));
+const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173')
+  .split(',')
+  .map((o) => o.trim());
+const vercelPreview = /^https:\/\/job-board-frontend-[a-z0-9-]+\.vercel\.app$/;
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: (origin, cb) => {
+    // allow non-browser clients (no Origin header), listed origins, and Vercel previews
+    if (!origin || allowedOrigins.includes(origin) || vercelPreview.test(origin)) {
+      return cb(null, true);
+    }
+    return cb(new Error(`CORS: origin ${origin} not allowed`));
+  },
   credentials: true,
 }))
 app.use(express.json());
